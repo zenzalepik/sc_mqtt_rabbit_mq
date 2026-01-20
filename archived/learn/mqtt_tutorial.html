@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial Project MQTT - Python, GUI, dan Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <header class="mb-8 border-b border-cyan-500/60 pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-cyan-400 drop-shadow-lg">Tutorial Project MQTT</h1>
+            <p class="mt-2 text-slate-300">Panduan singkat membangun ekosistem MQTT di folder ini: Python CLI, GUI, dan Web.</p>
+            <p class="mt-1 text-xs text-slate-500">Root project: <span class="font-mono text-cyan-300">D:\Github\sc_mqtt_mosquitto</span></p>
+        </header>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-cyan-300 mb-3">1. Struktur Project Utama</h2>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-sm font-mono text-slate-200">
+                <pre>
+sc_mqtt_mosquitto
+├─ .env
+├─ requirements.txt
+├─ subscriber.py
+├─ publisher.py
+├─ mqtt_gui.py
+├─ mqtt_publisher_gui.py
+├─ mqtt_subscriber_gui.py
+├─ mqtt_web.html
+└─ case_study
+   ├─ smart_light.py
+   ├─ dashboard.html
+   ├─ launcher.py
+   └─ smart_light2
+      ├─ monitor.py
+      └─ remote.py</pre>
+            </div>
+            <p class="mt-3 text-sm text-slate-300">File tutorial ini: <span class="font-mono text-cyan-300">case_study\mqtt_tutorial.html</span>.</p>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-cyan-300 mb-3">2. Konfigurasi MQTT dengan .env</h2>
+            <p class="text-sm text-slate-200 mb-2">Konfigurasi dasar disimpan di file <span class="font-mono text-cyan-300">.env</span> di root.</p>
+            <div class="bg-slate-900/70 border border-cyan-500/60 rounded-lg p-4 text-sm font-mono text-emerald-300">
+<pre>MQTT_BROKER=192.168.20.67
+MQTT_PORT=1883
+MQTT_WS_PORT=9001
+MQTT_TOPIC_PUB=tes/mqtt
+MQTT_TOPIC_SUB=tes/#</pre>
+            </div>
+            <p class="mt-3 text-sm text-slate-300">Di Python, konfigurasi ini dibaca dengan <span class="font-mono">python-dotenv</span>:</p>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-xs">
+<pre class="text-slate-100">import os
+from dotenv import load_dotenv
+
+load_dotenv()  # jika file .env berada di folder yang sama
+
+BROKER = os.getenv("MQTT_BROKER", "localhost")
+PORT = int(os.getenv("MQTT_PORT", 1883))</pre>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-cyan-300 mb-3">3. Client Python Sederhana (CLI)</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-emerald-300 mb-2">Publisher</h3>
+                    <p class="text-xs text-slate-300 mb-2">File: <span class="font-mono text-cyan-300">publisher.py</span></p>
+                    <pre class="text-xs bg-slate-950/60 border border-slate-800 rounded-md p-3 overflow-x-auto text-slate-100">import paho.mqtt.client as mqtt
+import time, json, os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BROKER = os.getenv("MQTT_BROKER", "localhost")
+PORT = int(os.getenv("MQTT_PORT", 1883))
+TOPIC = os.getenv("MQTT_TOPIC_PUB", "tes/mqtt")
+
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+client.connect(BROKER, PORT, 60)
+client.loop_start()
+
+count = 1
+while True:
+    payload = {"id": count, "msg": f"pesan ke-{count}"}
+    client.publish(TOPIC, json.dumps(payload))
+    print("publish:", payload)
+    count += 1
+    time.sleep(2)</pre>
+                </div>
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-emerald-300 mb-2">Subscriber</h3>
+                    <p class="text-xs text-slate-300 mb-2">File: <span class="font-mono text-cyan-300">subscriber.py</span></p>
+                    <pre class="text-xs bg-slate-950/60 border border-slate-800 rounded-md p-3 overflow-x-auto text-slate-100">import paho.mqtt.client as mqtt, os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BROKER = os.getenv("MQTT_BROKER", "localhost")
+PORT = int(os.getenv("MQTT_PORT", 1883))
+TOPIC = os.getenv("MQTT_TOPIC_SUB", "tes/#")
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    print("connected rc:", reason_code)
+    client.subscribe(TOPIC)
+
+def on_message(client, userdata, msg):
+    print("msg:", msg.topic, msg.payload.decode())
+
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+client.on_connect = on_connect
+client.on_message = on_message
+client.connect(BROKER, PORT, 60)
+client.loop_forever()</pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-cyan-300 mb-3">4. GUI Python dengan Tkinter</h2>
+            <p class="text-sm text-slate-200 mb-3">GUI publisher dan subscriber berdiri sendiri:</p>
+            <ul class="text-sm text-slate-200 list-disc list-inside mb-4">
+                <li><span class="font-mono text-cyan-300">mqtt_publisher_gui.py</span> – kirim pesan ke topic.</li>
+                <li><span class="font-mono text-cyan-300">mqtt_subscriber_gui.py</span> – monitor topic.</li>
+                <li>Keduanya membaca konfigurasi dari <span class="font-mono text-cyan-300">.env</span>.</li>
+            </ul>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-xs">
+<pre class="text-slate-100"># Contoh potongan logika connect di GUI
+broker = self.broker_var.get()
+port = int(self.port_var.get())
+
+print("[pub_gui] Connecting to", broker, port)
+self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+self.client.on_connect = self.on_connect
+self.client.on_disconnect = self.on_disconnect
+self.client.connect(broker, port, 60)
+self.client.loop_start()</pre>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-cyan-300 mb-3">5. Client Web (HTML + JS)</h2>
+            <p class="text-sm text-slate-200 mb-2">File utama untuk tes MQTT via browser:</p>
+            <ul class="text-sm text-slate-200 list-disc list-inside mb-3">
+                <li><span class="font-mono text-cyan-300">mqtt_web.html</span> – general MQTT client (publish &amp; subscribe).</li>
+                <li><span class="font-mono text-cyan-300">case_study\dashboard.html</span> – Smart Home Dashboard kontrol lampu.</li>
+            </ul>
+            <p class="text-sm text-slate-200 mb-2">Keduanya memakai <span class="font-mono text-cyan-300">Paho MQTT JavaScript</span> dan WebSockets:</p>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-xs">
+<pre class="text-slate-100">const client = new Paho.MQTT.Client("192.168.20.67", 9001, "web_" + Math.random());
+
+client.onConnectionLost = onConnectionLost;
+client.onMessageArrived = onMessageArrived;
+
+client.connect({
+  onSuccess: onConnect,
+  onFailure: (e) =&gt; console.log("connect failed", e)
+});</pre>
+            </div>
+            <p class="mt-3 text-xs text-slate-400">Broker harus di-set agar mendukung WebSockets pada port <span class="font-mono text-cyan-300">9001</span>.</p>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-cyan-300 mb-3">6. Studi Kasus: Smart Light</h2>
+            <p class="text-sm text-slate-200 mb-2">Folder <span class="font-mono text-cyan-300">case_study</span> berisi studi kasus lampu ruang tamu:</p>
+            <ul class="text-sm text-slate-200 list-disc list-inside mb-4">
+                <li><span class="font-mono text-cyan-300">smart_light.py</span> – simulasi lampu MQTT.</li>
+                <li><span class="font-mono text-cyan-300">smart_light2\monitor.py</span> – monitor status lampu.</li>
+                <li><span class="font-mono text-cyan-300">smart_light2\remote.py</span> – remote ON/OFF lampu.</li>
+                <li><span class="font-mono text-cyan-300">dashboard.html</span> – kontrol via web.</li>
+            </ul>
+            <p class="text-sm text-slate-200 mb-2">Topic yang digunakan konsisten:</p>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-xs font-mono text-emerald-300">
+<pre>home/livingroom/light/set      # Perintah dari remote / dashboard
+home/livingroom/light/status   # Status terakhir lampu (ON / OFF)</pre>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-cyan-300 mb-3">7. Cara Menjalankan Seluruh Ekosistem</h2>
+            <ol class="list-decimal list-inside text-sm text-slate-200 space-y-1 mb-4">
+                <li>Pastikan Mosquitto broker aktif (port 1883 dan WebSocket 9001 jika pakai web).</li>
+                <li>Jalankan simulator lampu:
+                    <span class="font-mono text-cyan-300">python case_study\smart_light.py</span>
+                </li>
+                <li>Jalankan monitor:
+                    <span class="font-mono text-cyan-300">python case_study\smart_light2\monitor.py</span>
+                </li>
+                <li>Jalankan remote:
+                    <span class="font-mono text-cyan-300">python case_study\smart_light2\remote.py</span>
+                </li>
+                <li>Opsional: jalankan HTTP server dan akses dashboard web.
+                    <span class="font-mono text-cyan-300">python -m http.server 8000</span>
+                </li>
+            </ol>
+            <p class="text-xs text-slate-400">Anda juga bisa menggunakan <span class="font-mono text-cyan-300">launcher.py</span> di folder <span class="font-mono text-cyan-300">case_study</span> untuk menjalankan ketiga aplikasi Python sekaligus.</p>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-800 pt-4 text-xs text-slate-500">
+            <p>File ini hanya dokumentasi, tidak mempengaruhi kode. Silakan modifikasi sesuai kebutuhan.</p>
+        </footer>
+    </div>
+</body>
+</html>
+

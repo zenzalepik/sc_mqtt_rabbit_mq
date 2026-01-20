@@ -1,0 +1,154 @@
+import tkinter as tk
+from tkinter import ttk, scrolledtext, messagebox
+import paho.mqtt.client as mqtt
+import time
+import os
+from dotenv import load_dotenv
+
+print("[sub_gui] Loading .env")
+load_dotenv()
+
+class MQTTSubscriberGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("MQTT Subscriber GUI")
+        self.root.geometry("600x500")
+        
+        self.client = None
+        self.is_connected = False
+        print("[sub_gui] App initialized")
+        self.create_widgets()
+
+    def create_widgets(self):
+        # Frame Koneksi
+        conn_frame = ttk.LabelFrame(self.root, text="Koneksi Broker", padding="10")
+        conn_frame.pack(fill="x", padx=10, pady=5)
+
+        ttk.Label(conn_frame, text="Broker:").grid(row=0, column=0, padx=5)
+        self.broker_var = tk.StringVar(value=os.getenv("MQTT_BROKER", "localhost"))
+        ttk.Entry(conn_frame, textvariable=self.broker_var).grid(row=0, column=1, padx=5)
+
+        ttk.Label(conn_frame, text="Port:").grid(row=0, column=2, padx=5)
+        self.port_var = tk.StringVar(value=os.getenv("MQTT_PORT", "1883"))
+        ttk.Entry(conn_frame, textvariable=self.port_var, width=10).grid(row=0, column=3, padx=5)
+
+        self.btn_connect = ttk.Button(conn_frame, text="Connect", command=self.toggle_connection)
+        self.btn_connect.grid(row=0, column=4, padx=10)
+
+        self.lbl_status = ttk.Label(conn_frame, text="Status: Disconnected", foreground="red")
+        self.lbl_status.grid(row=0, column=5, padx=10)
+
+        # Frame Subscriber
+        sub_frame = ttk.LabelFrame(self.root, text="Subscriber", padding="10")
+        sub_frame.pack(fill="both", expand=True, padx=10, pady=5)
+
+        top_sub_frame = ttk.Frame(sub_frame)
+        top_sub_frame.pack(fill="x", pady=5)
+        
+        ttk.Label(top_sub_frame, text="Subscribe Topic:").pack(side="left", padx=5)
+        self.sub_topic_var = tk.StringVar(value=os.getenv("MQTT_TOPIC_SUB", "tes/#"))
+        ttk.Entry(top_sub_frame, textvariable=self.sub_topic_var, width=30).pack(side="left", padx=5)
+        self.btn_sub = ttk.Button(top_sub_frame, text="Subscribe", command=self.subscribe_topic, state="disabled")
+        self.btn_sub.pack(side="left", padx=5)
+        ttk.Button(top_sub_frame, text="Clear Log", command=self.clear_log).pack(side="left", padx=5)
+
+        self.log_area = scrolledtext.ScrolledText(sub_frame, height=15)
+        self.log_area.pack(fill="both", expand=True, padx=5, pady=5)
+
+    def log(self, message):
+        print(f"[sub_gui] {message}")
+        self.log_area.insert(tk.END, message + "\n")
+        self.log_area.see(tk.END)
+
+    def clear_log(self):
+        self.log_area.delete('1.0', tk.END)
+
+    def toggle_connection(self):
+        if not self.is_connected:
+            self.connect_mqtt()
+        else:
+            self.disconnect_mqtt()
+
+    def connect_mqtt(self):
+        broker = self.broker_var.get()
+        print(f"[sub_gui] toggle_connection -> is_connected={self.is_connected}, broker={broker}, port={self.port_var.get()}")
+        try:
+            port = int(self.port_var.get())
+        except ValueError:
+            messagebox.showerror("Error", "Port harus berupa angka")
+            return
+
+        try:
+            print("[sub_gui] Initializing MQTT client")
+            self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+            self.client.on_connect = self.on_connect
+            self.client.on_message = self.on_message
+            self.client.on_disconnect = self.on_disconnect
+            
+            print(f"[sub_gui] Connecting to {broker}:{port}...")
+            self.client.connect(broker, port, 60)
+            print("[sub_gui] Starting network loop")
+            self.client.loop_start()
+            
+            self.btn_connect.config(state="disabled")
+        except Exception as e:
+            print(f"[sub_gui] connect_mqtt error: {e}")
+            messagebox.showerror("Error", f"Gagal connect: {e}")
+
+    def disconnect_mqtt(self):
+        if self.client:
+            print("[sub_gui] disconnect_mqtt called")
+            self.client.disconnect()
+            self.client.loop_stop()
+
+    def on_connect(self, client, userdata, flags, reason_code, properties):
+        print(f"[sub_gui] on_connect called, reason_code={reason_code}")
+        if reason_code == 0:
+            self.is_connected = True
+            self.update_status("Connected", "green")
+            self.log(f"Terhubung ke {self.broker_var.get()}:{self.port_var.get()}")
+            self.root.after(0, lambda: self.btn_connect.config(text="Disconnect", state="normal"))
+            self.root.after(0, lambda: self.btn_sub.config(state="normal"))
+            
+            # Auto subscribe jika ada topic
+            topic = self.sub_topic_var.get()
+            if topic:
+                self.subscribe_topic()
+        else:
+            self.update_status(f"Failed RC: {reason_code}", "red")
+            self.root.after(0, lambda: self.btn_connect.config(state="normal"))
+
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        print(f"[sub_gui] on_disconnect called, reason_code={reason_code}")
+        self.is_connected = False
+        self.update_status("Disconnected", "red")
+        self.log("Terputus dari broker")
+        self.root.after(0, lambda: self.btn_connect.config(text="Connect", state="normal"))
+        self.root.after(0, lambda: self.btn_sub.config(state="disabled"))
+
+    def on_message(self, client, userdata, msg):
+        try:
+            payload = msg.payload.decode()
+        except:
+            payload = str(msg.payload)
+        
+        timestamp = time.strftime("%H:%M:%S")
+        log_msg = f"[{timestamp}] [{msg.topic}] {payload}"
+        self.root.after(0, lambda: self.log(log_msg))
+
+    def update_status(self, text, color):
+        self.root.after(0, lambda: self.lbl_status.config(text=f"Status: {text}", foreground=color))
+
+    def subscribe_topic(self):
+        if not self.is_connected:
+            return
+            
+        topic = self.sub_topic_var.get()
+        if topic:
+            self.client.subscribe(topic)
+            self.log(f"Subscribed ke {topic}")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MQTTSubscriberGUI(root)
+    root.mainloop()

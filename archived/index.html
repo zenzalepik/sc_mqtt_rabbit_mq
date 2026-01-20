@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Project Hub</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; text-align: center; }
+        h1 { color: #333; }
+        .menu { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        a { text-decoration: none; background: #007bff; color: white; padding: 15px; border-radius: 8px; font-weight: bold; transition: background 0.3s; }
+        a:hover { background: #0056b3; }
+        .desc { font-size: 0.9em; color: #666; margin-top: 5px; display: block; font-weight: normal; }
+    </style>
+</head>
+<body>
+    <h1>MQTT Project Hub</h1>
+    <p>Silakan pilih aplikasi yang ingin dijalankan:</p>
+
+    <div class="menu">
+        <a href="case_study/dashboard.html">
+            🏠 Smart Home Dashboard
+            <span class="desc">Kontrol lampu rumah (Studi Kasus)</span>
+        </a>
+        <a href="mqtt_web.html">
+            📡 MQTT General Client
+            <span class="desc">Tools untuk Publish/Subscribe manual</span>
+        </a>
+    </div>
+
+    <p style="margin-top: 40px; font-size: 0.8em; color: #888;">
+        Pastikan Mosquitto Broker berjalan di 192.168.20.67 dengan WebSockets (Port 9001).
+    </p>
+</body>
+</html>

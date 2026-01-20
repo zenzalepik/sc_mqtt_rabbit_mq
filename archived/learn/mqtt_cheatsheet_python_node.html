@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Cheat Sheet - Python &amp; Node.js</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <header class="mb-8 border-b border-fuchsia-500/70 pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-fuchsia-400 drop-shadow-lg">MQTT Cheat Sheet</h1>
+            <p class="mt-2 text-slate-300">Integrasi cepat MQTT dengan Python (paho-mqtt) dan Node.js (mqtt.js).</p>
+            <p class="mt-1 text-xs text-slate-500">Gaya: Tailwind CDN, tema dark + neon.</p>
+        </header>
+
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-fuchsia-300 mb-2">1. Konsep Dasar MQTT</h2>
+            <div class="grid md:grid-cols-3 gap-4 text-sm">
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+                    <h3 class="font-semibold text-cyan-300 mb-1">Broker</h3>
+                    <p class="text-slate-200">Server yang menerima semua pesan dan mendistribusikan ke client yang subscribe.</p>
+                </div>
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+                    <h3 class="font-semibold text-cyan-300 mb-1">Topic</h3>
+                    <p class="text-slate-200">String hierarkis, contoh <span class="font-mono text-emerald-300">home/livingroom/light/status</span>.</p>
+                </div>
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+                    <h3 class="font-semibold text-cyan-300 mb-1">QoS &amp; Retain</h3>
+                    <p class="text-slate-200">QoS 0/1/2 menentukan level delivery. Retain menyimpan pesan terakhir per topic.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-fuchsia-300 mb-3">2. Python – paho-mqtt</h2>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 mb-4 text-xs">
+<pre class="text-slate-100">pip install paho-mqtt python-dotenv</pre>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-xs">
+                    <h3 class="text-emerald-300 font-semibold mb-2">Template Client Dasar</h3>
+<pre class="text-slate-100 overflow-x-auto">import paho.mqtt.client as mqtt
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BROKER = os.getenv("MQTT_BROKER", "localhost")
+PORT = int(os.getenv("MQTT_PORT", 1883))
+TOPIC = "demo/topic"
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    print("connected rc:", reason_code)
+    client.subscribe(TOPIC)
+
+def on_message(client, userdata, msg):
+    print("msg:", msg.topic, msg.payload.decode())
+
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+client.on_connect = on_connect
+client.on_message = on_message
+client.connect(BROKER, PORT, 60)
+client.loop_start()
+
+client.publish(TOPIC, "hello from python")
+
+input("enter untuk keluar...")
+client.loop_stop()
+client.disconnect()</pre>
+                </div>
+
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-xs">
+                    <h3 class="text-emerald-300 font-semibold mb-2">Opsi Penting Python</h3>
+                    <ul class="space-y-1 text-slate-200">
+                        <li><span class="font-mono text-cyan-300">client.username_pw_set(user, pwd)</span> – autentikasi.</li>
+                        <li><span class="font-mono text-cyan-300">client.will_set(topic, payload, qos, retain)</span> – Last Will.</li>
+                        <li><span class="font-mono text-cyan-300">client.reconnect_delay_set(min_delay, max_delay)</span> – backoff reconnect.</li>
+                        <li><span class="font-mono text-cyan-300">client.publish(topic, payload, qos, retain)</span> – kirim pesan.</li>
+                        <li><span class="font-mono text-cyan-300">client.loop_start()/loop_stop()</span> – loop di thread terpisah.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-fuchsia-300 mb-3">3. Node.js – mqtt.js</h2>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 mb-4 text-xs">
+<pre class="text-slate-100">npm install mqtt</pre>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-xs">
+                    <h3 class="text-sky-300 font-semibold mb-2">Template Client TCP</h3>
+<pre class="text-slate-100 overflow-x-auto">const mqtt = require("mqtt");
+
+const BROKER = process.env.MQTT_BROKER || "mqtt://localhost:1883";
+const TOPIC = "demo/topic";
+
+const client = mqtt.connect(BROKER);
+
+client.on("connect", () =&gt; {
+  console.log("connected");
+  client.subscribe(TOPIC);
+  client.publish(TOPIC, "hello from node.js");
+});
+
+client.on("message", (topic, message) =&gt; {
+  console.log("msg", topic, message.toString());
+});
+
+client.on("error", (err) =&gt; {
+  console.error("mqtt error", err);
+});</pre>
+                </div>
+
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-xs">
+                    <h3 class="text-sky-300 font-semibold mb-2">Template Client WebSockets</h3>
+<pre class="text-slate-100 overflow-x-auto">const mqtt = require("mqtt");
+
+const host = "ws://192.168.20.67:9001";
+const options = {
+  clientId: "node_ws_" + Math.random().toString(16).substring(2),
+};
+
+const client = mqtt.connect(host, options);
+
+client.on("connect", () =&gt; {
+  console.log("connected via ws");
+  client.subscribe("home/livingroom/light/status");
+});
+
+client.on("message", (topic, message) =&gt; {
+  console.log("msg", topic, message.toString());
+});</pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-fuchsia-300 mb-3">4. Pola Integrasi Python + Node.js</h2>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-sm">
+                <ol class="list-decimal list-inside space-y-1 text-slate-200">
+                    <li>Definisikan topic bersama, misalnya:
+                        <span class="font-mono text-emerald-300">app/chat/global</span>
+                    </li>
+                    <li>Python publish, Node.js subscribe:
+                        <ul class="list-disc list-inside ml-4 text-xs text-slate-300 mt-1">
+                            <li>Python:
+                                <span class="font-mono text-cyan-300">client.publish("app/chat/global", "hello from python")</span>
+                            </li>
+                            <li>Node.js: tangkap di <span class="font-mono text-cyan-300">client.on("message")</span>.</li>
+                        </ul>
+                    </li>
+                    <li>Node.js bisa balas ke topic lain, Python subscribe ke topic tersebut.</li>
+                    <li>Gunakan JSON sebagai format payload agar mudah diparse dua arah.</li>
+                </ol>
+            </div>
+
+            <div class="mt-4 grid md:grid-cols-2 gap-4 text-xs">
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+<pre class="text-slate-100 overflow-x-auto"># Python kirim JSON
+import json
+client.publish("app/chat/global", json.dumps({"from": "py", "msg": "hi"}))</pre>
+                </div>
+                <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+<pre class="text-slate-100 overflow-x-auto">// Node.js baca JSON
+client.on("message", (topic, message) =&gt; {
+  try {
+    const data = JSON.parse(message.toString());
+    console.log("from", data.from, "msg", data.msg);
+  } catch {
+    console.log("raw", message.toString());
+  }
+});</pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold text-fuchsia-300 mb-3">5. Tips Debug &amp; Checklist</h2>
+            <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-4 text-sm">
+                <ul class="list-disc list-inside space-y-1 text-slate-200">
+                    <li>Jika mendapat error seperti <span class="font-mono text-cyan-300">WinError 10061</span> atau <span class="font-mono text-cyan-300">ECONNREFUSED</span>, pastikan broker aktif dan port benar.</li>
+                    <li>Gunakan <span class="font-mono text-cyan-300">netstat -ano | findstr 1883</span> di Windows untuk cek port MQTT.</li>
+                    <li>Pastikan topic sama persis (case-sensitive) di Python dan Node.js.</li>
+                    <li>Gunakan QoS dan retain hanya jika memang dibutuhkan oleh skenario.</li>
+                    <li>Di lingkungan produksi, selalu aktifkan autentikasi dan TLS di broker.</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-800 pt-4 text-xs text-slate-500">
+            <p>File cheat sheet ini berada di <span class="font-mono text-fuchsia-300">case_study\mqtt_cheatsheet_python_node.html</span>. Buka langsung di browser untuk referensi cepat.</p>
+        </footer>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,56 @@
+[smart_light] Loading .env from: D:\Github\sc_mqtt_mosquitto\.env
+[smart_light] Config -> BROKER=127.0.0.1, PORT=1883, SET=home/livingroom/light/set, STATUS=home/livingroom/light/status
+[smart_light] App initialized
+[smart_light] Initializing MQTT client
+[smart_light] Connecting to 127.0.0.1:1883...
+[smart_light] Starting network loop
+[smart_light] on_connect called, reason_code=Success
+[smart_light] Subscribing to home/livingroom/light/set
+[smart_light] Subscribed to home/livingroom/light/set
+[smart_light] Publishing initial status
+[smart_light] toggle_light called with state=False
+[smart_light] update_light_visual -> is_on=False
+[smart_light] Published Status: OFF to home/livingroom/light/status
+[smart_light] on_message from home/livingroom/light/set: ON
+[smart_light] toggle_light called with state=True
+[smart_light] update_light_visual -> is_on=True
+[smart_light] Published Status: ON to home/livingroom/light/status
+[smart_light] on_message from home/livingroom/light/set: ON
+[smart_light] toggle_light called with state=True
+[smart_light] update_light_visual -> is_on=True
+[smart_light] Published Status: ON to home/livingroom/light/status
+[smart_light] on_message from home/livingroom/light/set: ON
+[smart_light] toggle_light called with state=True
+[smart_light] update_light_visual -> is_on=True
+[smart_light] Published Status: ON to home/livingroom/light/status
+[smart_light] on_message from home/livingroom/light/set: OFF
+[smart_light] toggle_light called with state=False
+[smart_light] update_light_visual -> is_on=False
+[smart_light] Published Status: OFF to home/livingroom/light/status
+[smart_light] on_message from home/livingroom/light/set: ON
+[smart_light] toggle_light called with state=True
+[smart_light] update_light_visual -> is_on=True
+[smart_light] Published Status: ON to home/livingroom/light/status
+[smart_light] on_message from home/livingroom/light/set: ON
+[smart_light] toggle_light called with state=True
+[smart_light] update_light_visual -> is_on=True
+[smart_light] Published Status: ON to home/livingroom/light/status
+[smart_light] on_message from home/livingroom/light/set: OFF
+[smart_light] toggle_light called with state=False
+[smart_light] update_light_visual -> is_on=False
+[smart_light] Published Status: OFF to home/livingroom/light/status
+[smart_light] on_message from home/livingroom/light/set: ON
+[smart_light] toggle_light called with state=True
+[smart_light] update_light_visual -> is_on=True
+[smart_light] Published Status: ON to home/livingroom/light/status
+Traceback (most recent call last):
+  File "D:\Github\sc_mqtt_mosquitto\case_study\smart_light.py", line 120, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2069, in __call__
+    def __call__(self, *args):
+    
+KeyboardInterrupt

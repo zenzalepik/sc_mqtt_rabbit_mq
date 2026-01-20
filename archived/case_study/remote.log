@@ -1,0 +1,23 @@
+[remote] Loading .env from: D:\Github\sc_mqtt_mosquitto\.env
+[remote] Config -> BROKER=127.0.0.1, PORT=1883, SET=home/livingroom/light/set
+[remote] App initialized
+[remote] Initializing MQTT client
+[remote] Connecting to 127.0.0.1:1883...
+[remote] Starting network loop
+[remote] on_connect called, reason_code=Success
+[remote] send_command -> publishing ON to home/livingroom/light/set
+[remote] send_command -> publishing ON to home/livingroom/light/set
+[remote] send_command -> publishing ON to home/livingroom/light/set
+[remote] send_command -> publishing OFF to home/livingroom/light/set
+[remote] send_command -> publishing ON to home/livingroom/light/set
+[remote] send_command -> publishing ON to home/livingroom/light/set
+[remote] send_command -> publishing OFF to home/livingroom/light/set
+[remote] send_command -> publishing ON to home/livingroom/light/set
+Traceback (most recent call last):
+  File "D:\Github\sc_mqtt_mosquitto\case_study\smart_light2\remote.py", line 81, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt

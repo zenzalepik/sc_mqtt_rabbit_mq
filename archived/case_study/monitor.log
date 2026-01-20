@@ -1,0 +1,39 @@
+[monitor] Loading .env from: D:\Github\sc_mqtt_mosquitto\.env
+[monitor] Config -> BROKER=127.0.0.1, PORT=1883, STATUS=home/livingroom/light/status
+[monitor] App initialized
+[monitor] Initializing MQTT client
+[monitor] Connecting to 127.0.0.1:1883...
+[monitor] Starting network loop
+[monitor] on_connect called, reason_code=Success
+[monitor] Subscribing to home/livingroom/light/status
+[monitor] on_message from home/livingroom/light/status: ON
+[monitor] update_status_visual -> ON
+[monitor] on_message from home/livingroom/light/status: OFF
+[monitor] update_status_visual -> OFF
+[monitor] on_message from home/livingroom/light/status: ON
+[monitor] update_status_visual -> ON
+[monitor] on_message from home/livingroom/light/status: ON
+[monitor] update_status_visual -> ON
+[monitor] on_message from home/livingroom/light/status: ON
+[monitor] update_status_visual -> ON
+[monitor] on_message from home/livingroom/light/status: OFF
+[monitor] update_status_visual -> OFF
+[monitor] on_message from home/livingroom/light/status: ON
+[monitor] update_status_visual -> ON
+[monitor] on_message from home/livingroom/light/status: ON
+[monitor] update_status_visual -> ON
+[monitor] on_message from home/livingroom/light/status: OFF
+[monitor] update_status_visual -> OFF
+[monitor] on_message from home/livingroom/light/status: ON
+[monitor] update_status_visual -> ON
+Traceback (most recent call last):
+  File "D:\Github\sc_mqtt_mosquitto\case_study\smart_light2\monitor.py", line 86, in <module>
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2069, in __call__
+    def __call__(self, *args):
+    
+KeyboardInterrupt

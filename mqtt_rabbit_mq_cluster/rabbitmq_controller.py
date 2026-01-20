@@ -68,23 +68,43 @@ class RabbitMQControllerGUI:
         self.log_text.see(tk.END)
 
     def run_script(self, script_name):
-        script_path = os.path.join(current_dir, "ps1", script_name)
+        # Determine OS and script type
+        is_windows = sys.platform.startswith('win')
+        
+        if is_windows:
+            script_folder = "ps1"
+            script_ext = ".ps1"
+            full_script_name = script_name + script_ext if not script_name.endswith(script_ext) else script_name
+        else:
+            script_folder = "sh"
+            script_ext = ".sh"
+            full_script_name = script_name.replace(".ps1", ".sh") # Handle calls asking for .ps1
+        
+        script_path = os.path.join(current_dir, script_folder, full_script_name)
+        
         if not os.path.exists(script_path):
             self.log(f"Script not found: {script_path}", "error")
             return
 
-        self.log(f"Executing {script_name}...", "info")
+        self.log(f"Executing {full_script_name}...", "info")
         
         def _run():
             try:
-                # Use PowerShell to run the script
-                cmd = ["powershell", "-ExecutionPolicy", "Bypass", "-File", script_path]
+                if is_windows:
+                    # Use PowerShell to run the script
+                    cmd = ["powershell", "-ExecutionPolicy", "Bypass", "-File", script_path]
+                else:
+                    # Use bash for Linux/RasPi
+                    # Ensure it's executable
+                    subprocess.run(["chmod", "+x", script_path])
+                    cmd = ["/bin/bash", script_path]
+
                 process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
-                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                    creationflags=subprocess.CREATE_NO_WINDOW if is_windows else 0
                 )
                 
                 for line in process.stdout:
@@ -101,10 +121,10 @@ class RabbitMQControllerGUI:
         threading.Thread(target=_run, daemon=True).start()
 
     def start_cluster(self):
-        self.run_script("start_cluster.ps1")
+        self.run_script("start_cluster.ps1") # Will be converted to .sh on Linux
 
     def stop_cluster(self):
-        self.run_script("stop_cluster.ps1")
+        self.run_script("stop_cluster.ps1") # Will be converted to .sh on Linux
         
     def open_monitor(self):
         try:

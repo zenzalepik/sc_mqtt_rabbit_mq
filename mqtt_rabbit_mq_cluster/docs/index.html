@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumentasi RabbitMQ Cluster HA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>RabbitMQ Cluster HA Documentation</h1>
+    <p>High Availability MQTT/AMQP Cluster dengan Failover Otomatis</p>
+</header>
+
+<nav>
+    <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#architecture">Arsitektur</a></li>
+        <li><a href="#installation">Instalasi</a></li>
+        <li><a href="#usage">Penggunaan</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+
+    <section id="overview">
+        <h2>Overview Proyek</h2>
+        <p>Proyek ini adalah implementasi <strong>High Availability (HA) RabbitMQ Cluster</strong> yang dirancang untuk ketahanan sistem (fault tolerance). Sistem ini terdiri dari 3 node RabbitMQ yang berjalan secara lokal dengan port yang berbeda, dilengkapi dengan mekanisme failover otomatis pada sisi client (Publisher/Subscriber).</p>
+        
+        <div class="note">
+            <strong>Fitur Utama:</strong>
+            <ul>
+                <li><strong>Multi-Platform:</strong> Berjalan di Windows, Linux (Ubuntu/Debian), dan Raspberry Pi.</li>
+                <li><strong>3-Node Cluster:</strong> Simulasi cluster production dalam satu mesin.</li>
+                <li><strong>Automatic Failover:</strong> Client otomatis pindah ke node lain jika node aktif mati.</li>
+                <li><strong>Offline Buffering:</strong> Pesan disimpan di SQLite lokal jika semua node mati, dan dikirim ulang saat koneksi pulih.</li>
+                <li><strong>GUI Dashboard:</strong> Monitoring status node secara real-time.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="architecture">
+        <h2>Arsitektur Sistem</h2>
+        <p>Sistem menggunakan 3 instance RabbitMQ yang berjalan independen namun terhubung dalam satu cluster logic.</p>
+
+        <h3>Konfigurasi Port</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Node</th>
+                    <th>AMQP Port</th>
+                    <th>Management UI</th>
+                    <th>MQTT Port (Plugin)</th>
+                    <th>Clustering Port</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Node 1</strong> (rabbit1)</td>
+                    <td>5672</td>
+                    <td>15672</td>
+                    <td>1883</td>
+                    <td>25672</td>
+                </tr>
+                <tr>
+                    <td><strong>Node 2</strong> (rabbit2)</td>
+                    <td>5673</td>
+                    <td>15673</td>
+                    <td>1884</td>
+                    <td>25673</td>
+                </tr>
+                <tr>
+                    <td><strong>Node 3</strong> (rabbit3)</td>
+                    <td>5674</td>
+                    <td>15674</td>
+                    <td>1885</td>
+                    <td>25674</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Alur Kerja Failover</h3>
+        <ol>
+            <li>Client (Publisher/Subscriber) mencoba connect ke <strong>Node 1</strong> (Port 5672/1883).</li>
+            <li>Jika Node 1 mati, client otomatis mencoba <strong>Node 2</strong>.</li>
+            <li>Jika Node 2 mati, client mencoba <strong>Node 3</strong>.</li>
+            <li>Jika semua mati, Publisher menyimpan pesan ke database lokal (<strong>SQLite</strong>).</li>
+            <li>Background thread terus memantau koneksi; begitu ada node yang hidup, pesan di-flush dari SQLite ke server.</li>
+        </ol>
+    </section>
+
+    <section id="installation">
+        <h2>Panduan Instalasi</h2>
+        
+        <h3>Prasyarat</h3>
+        <ul>
+            <li>Python 3.8+</li>
+            <li>Erlang/OTP (versi 24+)</li>
+            <li>RabbitMQ Server (versi 3.8+)</li>
+        </ul>
+
+        <h3>1. Persiapan Environment</h3>
+        <p>Install dependensi Python yang dibutuhkan:</p>
+        <pre><code>pip install pika paho-mqtt requests</code></pre>
+        <p><em>(Library `tkinter` biasanya sudah built-in di Python installer)</em></p>
+
+        <h3>2. Setup RabbitMQ</h3>
+        
+        <h4><span class="os-badge win">Windows</span></h4>
+        <p>Anda bisa menggunakan installer standar RabbitMQ atau mode <strong>Portable</strong> (disarankan agar tidak mengganggu sistem utama).</p>
+        <ul>
+            <li>Jalankan <code>tools/download_stack.py</code> untuk mengunduh Erlang dan RabbitMQ portable secara otomatis.</li>
+            <li>Script cluster akan otomatis mendeteksi folder <code>tools/</code>.</li>
+        </ul>
+
+        <h4><span class="os-badge linux">Linux</span> <span class="os-badge raspi">Raspberry Pi</span></h4>
+        <p>Gunakan package manager untuk menginstall RabbitMQ:</p>
+        <pre><code>sudo apt update
+sudo apt install erlang rabbitmq-server
+sudo systemctl stop rabbitmq-server # Stop service default agar port tidak bentrok</code></pre>
+    </section>
+
+    <section id="usage">
+        <h2>Cara Penggunaan</h2>
+
+        <h3>1. Menjalankan Cluster Controller</h3>
+        <p>Ini adalah pusat kendali utama. Script ini cerdas mendeteksi OS Anda.</p>
+        <pre><code>python rabbitmq_controller.py</code></pre>
+        <ul>
+            <li>Klik <strong>Start Cluster</strong>: Akan menjalankan 3 node RabbitMQ.</li>
+            <li>Klik <strong>Stop Cluster</strong>: Mematikan semua node.</li>
+            <li>Klik <strong>Check Status</strong>: Melihat status node yang aktif.</li>
+        </ul>
+
+        <h3>2. Monitoring Dashboard</h3>
+        <p>Untuk melihat visualisasi status node secara real-time:</p>
+        <pre><code>python app.py</code></pre>
+        <p>Aplikasi ini akan menampilkan indikator Hijau (Online) atau Merah (Offline) untuk setiap node.</p>
+
+        <h3>3. Menjalankan Publisher & Subscriber</h3>
+        <p>Buka dua terminal terpisah untuk mensimulasikan komunikasi:</p>
+        
+        <strong>Subscriber (Penerima):</strong>
+        <pre><code>python rabbitmq_subscriber_gui.py</code></pre>
+        
+        <strong>Publisher (Pengirim):</strong>
+        <pre><code>python rabbitmq_publisher_gui.py</code></pre>
+
+        <div class="warning">
+            <strong>Uji Coba Failover:</strong>
+            <p>Saat pesan sedang dikirim, coba matikan salah satu node (misal Node 1) melalui Controller atau Terminal. Perhatikan log pada Publisher/Subscriber yang akan otomatis "Reconnecting to Node 2..." tanpa kehilangan data.</p>
+        </div>
+    </section>
+
+    <section id="troubleshooting">
+        <h2>Troubleshooting</h2>
+
+        <h3>Cluster Gagal Start (Windows)</h3>
+        <ul>
+            <li>Pastikan tidak ada process <code>erl.exe</code> yang menggantung. Jalankan <code>ps1/stop_cluster.ps1</code> untuk membersihkan.</li>
+            <li>Pastikan Cookie Erlang sinkron (biasanya otomatis dihandle script).</li>
+        </ul>
+
+        <h3>Cluster Gagal Start (Linux/RasPi)</h3>
+        <ul>
+            <li>Cek permission file script: <code>chmod +x sh/*.sh</code>.</li>
+            <li>Pastikan port 5672/15672 tidak terpakai oleh service RabbitMQ default (<code>sudo systemctl stop rabbitmq-server</code>).</li>
+        </ul>
+
+        <h3>Library Python Error</h3>
+        <p>Jika muncul error `ModuleNotFoundError`, pastikan install ulang requirement:</p>
+        <pre><code>pip install -r requirements.txt</code></pre>
+        <p><em>(Buat file requirements.txt jika belum ada)</em></p>
+    </section>
+
+</div>
+
+<footer>
+    <p>&copy; 2025 RabbitMQ Cluster HA Project. Generated by Trae AI.</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+# INSTRUKSI MANUAL
+# =================
+
+# KARENA DOWNLOAD OTOMATIS GAGAL (BLOKIR JARINGAN), SILAKAN LAKUKAN INI:
+
+# 1. DOWNLOAD 2 FILE INI:
+#    - Erlang: https://github.com/erlang/otp/releases/download/OTP-26.2.2/otp_win64_26.2.2.exe
+#    - RabbitMQ: https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.13.0/rabbitmq-server-windows-3.13.0.zip
+
+# 2. LETAKKAN FILE DI SINI (D:\Github\sc_mqtt_rabbit_mq\tools\)
+#    JANGAN DI-RENAME. Biarkan nama aslinya:
+#    - otp_win64_26.2.2.exe
+#    - rabbitmq-server-windows-3.13.0.zip
+
+# 3. SETELAH FILE ADA DI SINI, JALANKAN PERINTAH INI DI TERMINAL:
+#    python D:\Github\sc_mqtt_rabbit_mq\tools\download_stack.py
+
+# Script python tersebut akan mendeteksi file yang Anda taruh, 
+# lalu menginstalnya secara otomatis untuk Anda.
